@@ -1,0 +1,221 @@
+---
+title: "AirbnbLab"
+author: "Krystal Ly"
+date: "10/25/2020"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#load packages
+library(ggmap)
+library(Imap)
+library(GGally)
+library(ggfortify)
+library(car)
+library(lindia)
+library(stringr)
+library(tidyverse)
+library(ggthemes)
+library(MASS)
+#import dataset
+airbnbData <- read_csv('Columbus_2020_listings.csv')
+```
+
+## Exploring the data set                                                            
+```{r}
+summary(airbnbData)
+```
+
+**3.	What ethical considerations might you have when working with this kind of data? Who are potential stakeholders in your analysis? What repercussions could your analysis have (e.g. statistical and communication ethics)?**                                                                             
+- Ethical considerations:                                                                                      
++ The first consideration I could think of is the equal distribution of benefits between renters and owners. The predictions will be used by both renters to identify good deals and owners to price their properties appropriately. Therefore, when conducting tests or making plots, it's important not to be biased by choosing variables that are to renters or owners' advantage. For example, there may be cases in which we choose some variables on purpose to predict and suggest a higher price to renters so that owners can take advantage of that or vice versa.                                                                    
++ The second consideration is the impact of our suggestion on location. If we are to suggest a good location to run an Airbnb room, it's better to think of how our suggestion would influence the buying and selling of houses at that location and other surrounding locations. We should also take into account the long-term effect. For example, even if we also suggest a suitable price for room at that location, how would the price change when our suggestion makes many people start offering rooms there?                                                                                        
++ Finally, this data set isn't collected by Airbnb, and it is also just a free data set. Therefore, there may be some inaccuracies in this data set that can affect our result and suggestions. We should also take into account some of the information in the disclaimers that may affect our result. For example, the location isn't exact but is from 0 to 450 feet from the actual one.                                                                                        
+- The potential stakeholders are renters, owners, potential renters, potential owners, Airbnb, landowners, neighbors of some specific location that we may suggest after this study.                                                                                                 
+- The repercussions that my analysis could have can be the things that I consider below:                                                           
++ My analysis may offer a biased or unsuitable price/location for renters and owners due to my own preference or the inaccurate/inexact data.                                                   
++ My suggestions may impact a specific location and people living in it greatly and unexpectedly. They may also impact the price of Airbnb rooms in general or in some specific locations.                                                                                                     
+
+*4.	OK, before we get too far, think about the main task at hand to predict housing price (response variable). What variable(s) do you think should be your predictor variables? Choose 5-7 predictors that you think make some logical sense, based on which of the variables seem intuitive to you and are easily understood.*                                                                                                                                
+- Predictors:                                                                                 
++ location (latitude and longitude)                                                           
++ room_type                                                   
++ bathrooms                                                 
++ bedrooms                                                                      
++ amenities                                                                                      
++ accommodates                                                                
++ review_scores_rating                                                  
++ calculated_host_listings_count                                                                                      
+*5*                                                                        
+```{r}
+airbnbData <- airbnbData %>%
+  	mutate(price = as.numeric(str_remove_all(price, "[$,]")),
+      weekly_price = as.numeric(str_remove_all(weekly_price, "[$,]")),
+      monthly_price = as.numeric(str_remove_all(monthly_price, "[$,]")),
+      security_deposit = as.numeric(str_remove_all(security_deposit, "[$,]")),
+      cleaning_fee = as.numeric(str_remove_all(cleaning_fee, "[$,]")),
+      extra_people = as.numeric(str_remove_all(extra_people, "[$,]")))
+```
+
+**6. Make 2 polished exploratory graphics related to price**                                                                   
+A boxplot: price and room_type                                                    
+
+```{r}
+airbnbData$room_type <- as.factor(airbnbData$room_type)
+
+ggplot(airbnbData, aes(room_type, price)) +
+  geom_boxplot(fill='#f25151') +
+  labs(title = 'Figure 1.1: Comparison of price\nbetween different types of room',
+       x='Type of Room', y='Price',
+       caption = 'The box plot shows the distribution of price for each type of room.\nIt also compares price between these types.') +
+  theme_economist() +
+  theme(plot.title = element_text(hjust=0.5))
+
+ggplot(airbnbData, aes(room_type, price)) +
+  geom_boxplot(fill='#f25151')+
+  coord_cartesian(ylim = c(0, 1300)) +
+  labs(title = 'Figure 1.1: Comparison of price\nbetween different types of room',
+       x='Type of Room', y='Price',
+       caption = 'The box plot shows the distribution of price for each type of room.\nIt also compares price between these types.') +
+  theme_economist()
+  theme(plot.title = element_text(hjust=0.5))
+ggplot(airbnbData, aes(room_type, price)) +
+  geom_boxplot(fill='#f25151')+
+  coord_cartesian(ylim = c(0, 300)) +
+  labs(title = 'Figure 1.1: Comparison of price\nbetween different types of room',
+       x='Type of Room', y='Price',
+       caption = 'The box plot shows the distribution of price for each type of room.\nIt also compares price between these types.') +
+  theme_economist() +
+  theme(plot.title = element_text(hjust=0.5))
+
+entireHomedata <- airbnbData %>%
+  dplyr :: select(room_type,price)%>%
+  filter(room_type=='Entire home/apt')
+
+range(entireHomedata$price)
+```
+
+According to Figure 1, it's clear that the price for entire home or appointment varies greatly compared to other room types. Therefore, I use the range function to see the exact range of it. The price appears to range from $10 to $10,000. This is a great range that we should notice because it may affect the result of our analyses.                                         
+In order to get a good view of all the boxes, I try to zoom in several times. The last graph is the one I'm interpreting. The last graph indicates that Hotel rooms usually have higher price (from approximately $200 to $260). The private and shared rooms have a huge difference in price from the remaining two types, especially shared rooms. Particularly, private rooms have price from approximately $40 to $60, and shared rooms have price from approximately $20 to $40. These make sense in real world setting. Therefore, I think that room types do affect the price of rental units in Columbus.                                            
+
+A scatter plot: price and amenities                                                                                                          
+```{r}
+ggplot(airbnbData, aes(bedrooms, price)) +
+  geom_point(alpha=1/10,color='blue') +
+  geom_smooth(method = 'lm',linetype=1) +
+  labs(title = 'Figure 1.2: The relationship between\nthe number of bedrooms and price',
+       x='Number of bedrooms', y='Price',
+       caption = 'The scatter plot shows the positive relationship between the number of bedrooms and price') +
+  theme_economist() +
+  theme(plot.title = element_text(hjust=0.5))
+
+ggplot(airbnbData, aes(bedrooms, price)) +
+  geom_point(alpha=1/10,color='blue') +
+  coord_cartesian(ylim = c(0, 300)) +
+  geom_smooth(method = 'lm',linetype=1) +
+  labs(title = 'Figure 1.2: The relationship between the number of bedrooms and price',
+       x='Number of bedrooms', y='Price',
+       caption = 'The scatter plot shows the positive relationship between the number of bedrooms and price') +
+  theme_economist() +
+  theme(plot.title = element_text(hjust=0.5))
+```
+Just like in the previous plot, I try to zoom in to get a better view. According to the line of best fit in Figure 1.2, we can see that there is a strongly positive relationship between number of bedrooms and price. However, the line of best fit is only valid when there is no or just one bedroom. Other than that, the price has a very wide range that there is no obvious relationship being shown. To sum up, the number of bedrooms may not influence the price much in general.                                                                                                  
+**7. Make a map**                                                                                         
+```{r}
+map <- c(left=-83.2, bottom=39.8, right=-82.75, top=40.16)
+columbus_map <- get_stamenmap(map, zoom = 10, maptype = 
+"terrain")
+
+ggmap(columbus_map) + 
+  geom_point(data = airbnbData, aes(x=longitude, y=latitude,color=room_type),alpha=3/10) +
+  labs(title = 'Figure 1.3: The location of Airbnb rooms and its type',
+       x='Longitude', y='Latitude',
+       caption = 'The map shows the location of Airbnb rooms and its type by using different shapes.\nIt is clear that people often have entire home or appartmen for rent in the center of Columbus.') +
+  theme_economist() +
+  theme(plot.title = element_text(hjust=0.5))
+```
+                                                                                               
+**8. Plot the price by one predictor variable of your choice, with a trend line, run a simple linear regression, and completely and accurately interpret the output.**                                                                                  
+```{r}
+modelAccomPrice <- lm(price ~ accommodates, airbnbData)
+summary(modelAccomPrice)
+```
+I do some research and find out that accommodates mean the number of people renting together which can greatly affect the price. Therefore, I run a linear regression to find out about the relationship between accommodates and price. I find a p-value of less than 2.2e-16 which is highly significant so I can reject the hypothesis that the R-squared equals to 0, or this model can't explain anything. I find that this is a significant model where changes in accommodates explain 6.04% of changes in price (R-squared= 0.06). This may seem small statistically but in reality, price is usually influenced by multiple factors, not just one. Therefore, 6,04% isn't small given that there are other factors which together affect price. Overall, this is an explanatory model. To go into more detail, I find that the intercept is -149.389. It is significant with the p-value 0.0126. I also find a significant slope (p-value < 2e-16) that tells me for every single person (accommodate) that is added, I could expect my price to go up $95.3. The linear equation is price = 95.359*accommodates - 149.389. To sum up, this model isn't just statistically significant but also practically significant. It makes sense that the larger the number of people is, the higher the price is.                                               
+
+**9. Choose 5-7 potential predictor variables (not your response variable), and make a pairs plot**                                                             
+```{r warning=FALSE}
+airbnbData <- airbnbData %>%
+  mutate(total_amenities = str_count(amenities, ',')+1)
+ggpairs(airbnbData, columns=c('accommodates','bedrooms','bathrooms','total_amenities','review_scores_rating','calculated_host_listings_count'))
+```
+According to the pairs plot I make above, there predictors seem to be correlated:                                                                   
+- `bedrooms` and `accommodates` is highly correlated with the correlation coefficient of 0.822. I would remove `accommodates` and choose `bedrooms`. The number of bedrooms is something fixed that the owners can base on at first to determine their price, while the number of people renting together is something that the owners can't know in advance to determine the price and post it on the website based on that. I also have made a linear regression for `accommodates` so it would be better to explore `bedrooms`                                                                    
+- `bathrooms` and `accommodates` is slightly correlated. With the same reason as above, I remove `accommodates` and choose `bathrooms`.                                                                       
+- `bathrooms` and `bedrooms` is also correlated. I would keep `bedrooms` for two reasons. First, it's correlated with `accommodates` more than `bathrooms` so when making a test with `bedrooms`, I also get some information about `accommodates`. Second, `bedrooms`,in reality, is more likely to affect the price than `bathrooms`. It's also likely that `bedrooms` is a criterion for renters when they want to find a place on Airbnb. We can have 10 people with just 1 bathroom, but we can't have 10 people with just 1 bedrooms for sure.                                                                                                                         
+After analyzing the plot, I would choose `bedrooms`,`total_amenities`,`review_scores_rating`,`calculated_host_listings_count`.                                                                                               
+**10.	Regression 2 (multiple linear regression)**                                                                              
+```{r}
+modelMultiplelm <- lm(price ~ bedrooms + total_amenities + review_scores_rating + calculated_host_listings_count,airbnbData)
+summary(modelMultiplelm)
+```
+I run a multiple linear regression to find out about the relationship between the number of bedrooms, amenities, host listings, the review scores and price. Taking a look at the result, I find that the p-value for total_amenities isn't significant compared to others. I run a stepwise model selection to help me determine if I should keep total_amenities or any other predictors.                                                                                                   
+
+```{r}
+step <- stepAIC(modelMultiplelm)
+step$anova
+```
+According to the model, I should remove total_amenities as one of my predictors.                                                            
+```{r}
+modelMultiplelm2 <- lm(price ~ bedrooms + calculated_host_listings_count + review_scores_rating ,airbnbData)
+summary(modelMultiplelm2)
+```
+I run a multiple linear regression again without total_amenities. I find a p-value of 2.612e-16 which is highly significant. Therefore, I can reject the hypothesis that the R-squared equals to 0, or this model can't explain anything. I find that this is a not very significant model where changes in high school bedrooms, review_scores_rating and calculated_host_listings_count explain just 5,6% of changes in price (Adjusted R-squared= 0.05681). Overall, this is a not very explanatory model. This may seem small statistically but it's still useful in reality given that room_type is highly likely to influence price most and these remaining factors can still be considered as some small factors that are together influential. To go into more details, I find that the intercept is 3176.1. It is significant with the p-value of 2.01e-07. I also find significant slopes. p-value equals 2.74e-07, 0.00626, and 5.83e-08 for bedrooms, calculated_host_listings_count, and review_scores_rating respectively. These tell me that for every number of bedrooms, host listings and review scores that go up, I could expect my price to go up $182 or $7.6 or go down $33.8 respectively. The linear equation is price = 182* bedrooms + 7.6 * calculated_host_listings_count - 33.8 * review_scores_rating + 3176.146. To sum up, I think these factors are still useful and need to be taken into account even if the R-squared is quite small.                                                                                                                                                      
+
+**11. Validate your model**                                                                                          
+```{r}
+gg_diagnose(modelMultiplelm2)
+```
+I check the histogram of my residuals. It's normally distributed, It's centered on 0, and the peak of it is also 0. Although there are some outliers, there aren't many of them so I think this is a model that seems to be valid and worth working with.                                                                                 
+In my Residual vs Fitted plot and Normal Q-Q plot, the red line is nearly flat and close to 0. The majority of the points lies close to the red line, but some of them doesn't. I think that there are some outliers, and these are so grealy different from the other points that I would need to keep in mind.                                                
+In Scatter-Location plot, the red line isn't flat. It comes off in the end. Therefore, I think that my model isn't homoscedastic. It isn't farily good at predicting. In particular, it is bad for prediction when it comes to prices that are greater than $2,000.                                                                            
+In my Residual vs Leverage plot, the red line isn't flat, and it's also not close to the line of 0. There are also again some outliers.                                                                           
+**12.	Write a short paragraph that interprets the output and validation of your model and answers the following questions: What is the effect (statistically speaking) of each predictor on the price? How much (in $) does each predictor influence price? How did you know if your model was any good?**                    
+After making the multiple linear regression, I come to this linear equation: price = 182* bedrooms + 7.6 * calculated_host_listings_count - 33.8 * review_scores_rating + 3176.146. Based on the equation, it's clear that the number of bedrooms has the greatest impact on the price which increases the price by $182 for each bedroom that is added. The second one is `review_scores_rating` with a decrease of $33.8 in price for each increase in scores, and the last one is `calculated_host_listings_count` with an increase of $7.6 in price for each increase in listings. Although `review_scores_rating` comes second, it isn't very influential compared to the influence of `bedrooms` on price. My model isn't very good after all. The reason is that there are many outliers, which I think are from price. As I have made many plots above, I see that I always have to zoom in because of many prices that are so high from the rest of the prices. I may need to go through these high prices to see if I should keep or remove them or if I could get any useful insights from them.                                     
+
+**13. Make some predictions of rental prices using the predict() function.**                                                          
+```{r}
+summary(airbnbData$bedrooms)
+summary(airbnbData$calculated_host_listings_count)
+summary(airbnbData$review_scores_rating)
+lowpricetest <- data.frame(bedrooms = 1, calculated_host_listings_count=1, review_scores_rating=99)
+predict(modelMultiplelm2, lowpricetest)
+mediumpricetest <- data.frame(bedrooms = 1.811, calculated_host_listings_count=11.18, review_scores_rating=95.65)
+predict(modelMultiplelm2, mediumpricetest)
+highpricetest <- data.frame(bedrooms = 2, calculated_host_listings_count=50, review_scores_rating=20)
+predict(modelMultiplelm2, highpricetest)
+```
+For the low price prediction, I choose bedrooms = 1 because there is a positive relationship between bedrooms and price. I choose calculated_host_listings_count = 1 because of the positive relationship between it and price, and one more reason is that few listings may come from hosts that are individuals, not companies. Individuals is likely to offer a cheaper price because they aren't have to pay for employees or other fees to run the rooms, and they may also have rooms not on regular basis but just when they go out or have spare rooms in their house. I choose review_scores_rating = 99 because of the negative relationship, and also because according to the summary, the review scores are pretty high in general so I just choose a very high score for this. I choose all values based on the 1st  quartile in the summary to avoid outliers, and to make it more practical based on choosing 1st quartile from the actual price in the data set. The result is a cheap price of $14.24.                                                                                    
+For the medium price prediction, I choose all values based on the mean of each predictors. The result is a price of $352.6.                                       
+For the high price prediction, I choose all values based on the mean of each predictors. The result is a high price of 3243.393.                                    
+
+**14.	Based on your analysis, what are the best characteristics for opening an Airbnb that you could rent out at a high price in Columbus? Write a final paragraph explaining your model and take-home message, including any potential pitfalls of your analysis.**                                                            
+After analyzing, I can put all the factors that I have analyzed into two categories: influential factors and not very influential but still good factors. The influential factor is definitely the type of rooms. According to Figure 1.1, different types of room have distinct ranges of price with hotel room having the highest price. The not very in inluential but still good factors include the number of bedrooms and calculated host listings. I don't include the review scores because the scores are all high and don't vary much based on the summary. I also don't include location because according to Figure 1.3, most Airbnbs are in the center of Columbus. Given all the factors, the best characteristics for opening an Airbnb that we could rent out at a high price in Columbus is a hotel room in the center of Columbus as usual, having 2 or more bedrooms, and the hotel room is from companies with many other rooms and systematic management rather than from individuals. However, I still think that I need to take a look at the outliers in price and analyze them to get more useful insights and decide whether to remove or keep them because they influence my model validation pretty much. I also think that I need more data about the hosts' experience and the status of their Airbnbs because there must be more contributing factors than just types of room, and I still need to find them out.                                                                                                
+**15.	Read the article below and respond to it in 3-5 sentences, given your analysis**                                                          
+I find this article really interesting. It brings up more problems with Airbnb and helps me understand this home-sharing platform more. The concern for overtourism is the same as my ethical concern in the beginning. My suggestion may greatly affect a specific location and its neighborhood. Fortunately, I haven't found any relationship between price and location and haven't suggested any specific location yet. I think that if I happen to continue on this analysis, besides suggesting the best place to run an Airbnb room, I will take into account the fees which the hosts may have to pay when choosing to buid a room for rent at that crowded or possibly crowded location. It may serve as a warning for hosts, and avoids overcrowding. I could also take profit as a measure instead of price to show a more comprehensive view to owners and renters as there are many cases in which the high price worths it.                                                              
+
+
+
+
+
+
+
+
+
+
+
+
+

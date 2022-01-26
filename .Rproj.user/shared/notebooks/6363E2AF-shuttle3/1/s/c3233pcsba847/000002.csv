@@ -1,0 +1,48 @@
+"0","lrm(Failure~Ambient.Temperature..oF.,shuttle)"
+"1","Logistic Regression Model
+"
+"1"," "
+"1","
+"
+"1"," "
+"1","lrm(formula = Failure ~ Ambient.Temperature..oF., data = shuttle)
+"
+"1"," "
+"1","
+"
+"1"," "
+"1","                       Model Likelihood    Discrimination    Rank Discrim.    
+"
+"1"," "
+"1","                             Ratio Test           Indexes          Indexes    
+"
+"1"," "
+"1","Obs             23    LR chi2      7.95    R2       0.413    C       0.781    
+"
+"1"," "
+"1"," 0              16    d.f.            1    g        1.850    Dxy     0.562    
+"
+"1"," "
+"1"," 1               7    Pr(> chi2) 0.0048    gr       6.360    gamma   0.589    
+"
+"1"," "
+"1","max |deriv| 0.0002                         gp       0.292    tau-a   0.249    
+"
+"1"," "
+"1","                                           Brier    0.139                     
+"
+"1"," "
+"1","
+"
+"1"," "
+"1","                         Coef    S.E.   Wald Z Pr(>|Z|)
+"
+"1"," "
+"1","Intercept                15.0429 7.3786  2.04  0.0415  
+"
+"1"," "
+"1","Ambient.Temperature..oF. -0.2322 0.1082 -2.14  0.0320  
+"
+"1"," "
+"1","
+"

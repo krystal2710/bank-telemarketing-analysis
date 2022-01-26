@@ -1,0 +1,5 @@
+"0","housingDF %>% ggplot(aes(median_income)) +"
+"0","  geom_histogram() +"
+"0","  labs(title = ""Distribution of median_income"")"
+"2","`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+"

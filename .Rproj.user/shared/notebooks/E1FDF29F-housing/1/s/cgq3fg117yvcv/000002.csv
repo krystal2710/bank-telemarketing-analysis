@@ -1,0 +1,12 @@
+"0","housingDF2 <- housingDF %>% "
+"0","  mutate(logTotalRooms = log(total_rooms), logTotalBedrooms = log(total_bedrooms), logPopulation = log(population), logHouseholds = log(households)) %>%"
+"0","  select(!total_rooms) %>%"
+"0","  select(!total_bedrooms) %>%"
+"0","  select(!population) %>%"
+"0","  select(!households) "
+"0",""
+"0","housingDF2 %>% ggplot(aes(logTotalRooms)) +"
+"0","  geom_histogram() + "
+"0","  labs(title = ""Distribution of logTotalRooms"")"
+"2","`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+"

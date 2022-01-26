@@ -1,0 +1,3 @@
+"0",""
+"0","bankTrain %>% "
+"0","  ggplot(aes(x = job, fill = deposit)) + geom_bar() + labs(title = ""Distribution of deposit based on job"") + theme(axis.text.x = element_text(angle = 10))"

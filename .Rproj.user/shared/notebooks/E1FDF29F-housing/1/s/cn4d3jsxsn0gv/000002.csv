@@ -1,0 +1,3 @@
+"0","null <- lm(median_house_value~1, housingtrain)"
+"2","Error in is.data.frame(data) : object 'housingtrain' not found
+"

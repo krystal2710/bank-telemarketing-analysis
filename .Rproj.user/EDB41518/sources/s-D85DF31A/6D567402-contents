@@ -1,0 +1,62 @@
+---
+title: "DA 350 CROSS VALIDATION LAB"
+output: 
+  html_document: default
+  code_folding: hide
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages(caret)
+library(caret)
+library(dplyr)
+```
+
+## Question 1
+**Simulate from function $y(t) = 2t + 3cos(2t) + t^{1/2} + ε$ on the range from t=0 to 5 and ϵ∼N(0,16)**
+
+```{r}
+set.seed(1)
+n <- 100
+t <- runif(n,0,5)
+cv_training <- data.frame(t)
+cv_training <- cv_training %>%
+  mutate(y = 2*t+ 3*cos(2*t) + t^0.5 + rnorm(n,0,4))
+
+ggplot(cv_training, aes(t,y)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Relationship between y and t of simulated data") + 
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5))
+
+t2 <- runif(n,0,5)
+cv_test <- data.frame(t = t2)
+cv_test <- cv_test %>%
+  mutate(y = 2*t+ 3*cos(2*t) + t^0.5 + rnorm(n,0,4))
+```
+Looking at the plot of simulated data, it looks like a degree 3 polynomial would well approximate it.
+
+## Question 2
+**Fit a degree 1, degree 2, … , degree 12 polynomial to the training data and plot the training MSE**
+
+```{r}
+my_lms <- lapply(1:12,function(x) lm(y~poly(t,x),cv_training))
+training_MSE <- data.frame(d=1:12,MSE= sapply(my_lms, function(x) mean(x$residuals^2)))
+
+ggplot(training_MSE, aes(d, MSE)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Training MSE based on degree polynomial", x = "Degree Polynomial", y = "Training Mean Squared Error") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+On the basis of selecting the model with the lowest training MSE, 12 degree polynomial model (MSE = 12.487) would be used for predictions.              
+
+## Question 3
+**Why is your answer to the prior question a very bad idea to do in practice?**
+It is a very bad idea to choose the model with the lowest training MSE because of overfitting. This means that the model we choose may be too sensitive to specific training data that it only fits the traning data and is of no use to future predictions. In other word, one change in the training data set may result in a significant change in the model. The model has no prediction power except for representing the training data itself.
+
+## Question 4
+**What is the theoretical lowest test MSE that could be achieved, and how does that compare to your graph from Q2?**

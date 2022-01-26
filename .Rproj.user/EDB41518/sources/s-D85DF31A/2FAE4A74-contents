@@ -1,0 +1,286 @@
+---
+title: "Bank Telemarketing Dataset"
+output: 
+  html_document: default
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(rms)
+library(ResourceSelection)
+library(naniar)
+```
+
+## Read and explore the dataset
+```{r}
+bankDf <- read.csv2("bank-additional-full.csv")
+summary(bankDf)
+glimpse(bankDf)
+```
+## Data Wrangling
+### Turn all "unknown" to NA value
+```{r}
+bankDf <- bankDf %>% replace_with_na_all(condition = ~.x == "unknown")
+```
+
+### Turn Bernoulli variables into 0 and 1 categories
+```{r}
+bankDf <- rename(bankDf, telephone = contact)
+bankDf <- rename(bankDf, deposit = y)
+
+bankDf <- bankDf %>%
+  #mutate(employed = ifelse(employed == "unemployed", 0, 1)) %>%
+  mutate(default = ifelse(default == "yes", 1, 0)) %>%
+  mutate(housing = ifelse(housing == "yes", 1, 0)) %>%
+  mutate(loan = ifelse(loan == "yes", 1, 0)) %>%
+  mutate(telephone = ifelse(telephone == "telephone", 1, 0)) %>%
+  mutate(deposit = ifelse(deposit == "yes", 1, 0))
+
+
+```
+
+### Turn other variables into its suitable types of variables 
+```{r}
+#bankDf$employed <- as.factor(bankDf$employed)
+bankDf$job <- as.factor(bankDf$job)
+bankDf$marital <- as.factor(bankDf$marital)
+bankDf$education <- as.factor(bankDf$education)
+bankDf$default <- as.factor(bankDf$default)
+bankDf$housing <- as.factor(bankDf$housing)
+bankDf$loan <- as.factor(bankDf$loan)
+bankDf$telephone <- as.factor(bankDf$telephone)
+bankDf$poutcome <- as.factor(bankDf$poutcome)
+bankDf$month <- as.factor(bankDf$month)
+bankDf$day_of_week <- as.factor(bankDf$day_of_week)
+
+bankDf$previous <- as.numeric(bankDf$previous)
+bankDf$emp.var.rate <- as.numeric(bankDf$emp.var.rate)
+bankDf$cons.price.idx <- as.numeric(bankDf$cons.price.idx)
+bankDf$cons.conf.idx <- as.numeric(bankDf$cons.conf.idx)
+bankDf$euribor3m <- as.numeric(bankDf$euribor3m)
+bankDf$nr.employed <- as.numeric(bankDf$nr.employed)
+
+bankDf$pdays <- as.factor(bankDf$pdays)
+summary(bankDf)
+```
+### Make some decisions
+We decide to remove those columns below:
+- `default` because it has too many NAs
+- `poutcome` (previous campaign's outcome) because it has too many "nonexistent" result
+- `pdays` (days after the customers were last contacted in the previous campaigns) because most of the customers had never been contacted before
+```{r}
+bankDf <- bankDf %>%
+  select(!default) %>%
+  select(!poutcome) %>%
+  select(!pdays)
+
+bankDf <- na.omit(bankDf)
+summary(bankDf)
+```
+
+### Split into traning and test dataset
+```{r}
+set.seed(1)
+N <- seq(38245)
+S <- sample(N,30596)
+bankTrain <- bankDf[S,]
+bankTest <- bankDf[-S,]
+summary(bankTrain)
+summary(bankTest)
+```
+## Data Exploration
+### Histogram showing the distribution
+Looking at the summary table, a histogram of `age`, `duration`, `campaign`, `previous` may be worth looking at since the data seems to be skewed and needs some transformation.
+```{r}
+bankTrain %>%
+  ggplot(aes(age)) + geom_histogram() +
+  labs(title = "Histogram of age")
+
+bankTrain %>%
+  ggplot(aes(duration)) + geom_histogram() +
+  labs(title = "Histogram of duration")
+
+bankTrain %>%
+  ggplot(aes(campaign)) + geom_histogram() +
+  labs(title = "Histogram of campaign")
+
+bankTrain %>%
+  ggplot(aes(previous)) + geom_histogram() +
+  labs(title = "Histogram of previous")
+table(bankTrain$previous)
+```
+We will use log transformation on `duration` and `campaign`. We will also turn `previous` into a categorical variable.
+```{r}
+#log transformation
+bankTrain <- bankTrain %>%
+  mutate(logDuration = log(duration))
+
+bankTrain <- bankTrain %>%
+  mutate(logCampaign = log(campaign))
+
+bankTrain %>%
+  ggplot(aes(logDuration)) + geom_histogram() +
+  labs(title = "Histogram of logDuration")
+
+bankTrain %>%
+  ggplot(aes(logCampaign)) + geom_histogram() +
+  labs(title = "Histogram of logCampaign")
+```
+
+`campaign` seems to be worsened off so we may leave it alone instead of taking the log transformation.
+```{r}
+bankTrain <- bankTrain %>%
+  select(!logCampaign) %>%
+  select(!duration)
+```
+
+### Other plots to identify potential relationship
+We will draw some more plots to see which categorical variables potentially have influence on `deposit`
+
+```{r}
+bankTrain %>% 
+  ggplot(aes(x = job, fill = deposit)) + geom_bar() + labs(title = "Distribution of deposit based on job") + theme(axis.text.x = element_text(angle = 10))
+
+bankTrain %>% 
+  ggplot(aes(x = job, fill = deposit)) + geom_bar() + labs(title = "Distribution of deposit based on job") + theme(axis.text.x = element_text(angle = 10))
+```
+
+## Modeling process
+```{r}
+bankTrain <- bankTrain %>%
+  filter(logDuration != -Inf)
+
+reg <- glm(deposit ~ ., bankTrain, family = binomial)
+summary(reg)
+```
+We would remove `age`, `job`, `marital`, `education`, `housing`, `loan`, `day_of_week`, `campaign`, `nr.employed`
+```{r}
+reg2 <- glm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration, bankTrain, family = binomial)
+summary(reg2)
+```
+We may consider remove `month`
+```{r}
+reg3 <- glm(deposit ~ telephone + previous + emp.var.rate + cons.price.idx + euribor3m + cons.conf.idx + logDuration, bankTrain, family = binomial)
+summary(reg3)
+```
+Also, remove `euribor3m`.
+
+```{r}
+reg4 <- glm(deposit ~ telephone + previous + emp.var.rate + cons.price.idx + cons.conf.idx + logDuration, bankTrain, family = binomial)
+summary(reg4)
+```
+
+```{r}
+# Drop-in deviance tests
+
+pchisq(21272-12182,43,lower.tail = FALSE)
+pchisq(21272-12267,16,lower.tail = FALSE)
+pchisq(21272-12803,7,lower.tail = FALSE)
+pchisq(21272-12803,6,lower.tail = FALSE)
+
+```
+We will have to now consider moving forward with one of the models. We should definitely eliminate model 1 as it has too many varriables with statistically insignificant p-values. We should also eliminate model 3 because `euribor3m` has a statistically insignificant p-values. We are left with model 2 and 4. The drop-in deviance tests yield 0 for all models, indicating that the probability of getting a larger or equal drop-in deviance is also statistically significant (lower than 0.05). This indicates that it's hard to have a larger or equal drop-in deviance. Thus, our models are adequate. They are significantly better than the null model, explaining a larger amount of variation of `deposit`.
+
+Since the drop-in deviance test doesn't point out which model is better, we will take a look at the residual deviance, the AIC and Dxy. 
+
+```{r}
+lrm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration, bankTrain)
+lrm(deposit ~ telephone + previous + emp.var.rate + cons.price.idx + cons.conf.idx + logDuration, bankTrain)
+```
+Clearly, model 2 has a smaller residual deviance (12267) compared to model 4 (12803). Model 2 also has a larger Dxy than model 4, 0.866 compared to 0.843. This means that model 2 fits the data more than model 4, and the variables in model 2 are more significant. 
+The only concern we have is that some of the month is not significant. We may convert month into different Bernoulli variables and eliminate those that are not significant or we may run a drop-in deviance test for month to see if it offers a greater model than the null model. 
+
+```{r}
+# Drop-in deviance test for month
+pchisq(12803-12267,16-7,lower.tail = FALSE)
+
+```
+It appears that month is quite significant since the drop-in test yields 1.11*10^{-109} as the p-value.
+After some experiment, we realize that using august as the baseline would make all the p-values significant. This can happen due to the fact that the `monthaug` may affect `deposit` different from other months a lot. 
+
+```{r}
+bankTrain$month <- relevel(bankTrain$month, ref = "aug")
+reg5 <- glm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration, bankTrain, family = binomial)
+summary(reg5)
+```
+```{r}
+lrm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration, bankTrain)
+```
+
+We will move forward with model 2 and try to improve the model by adding interaction terms.
+
+## Interaction Terms
+Since when we remove month, euribor3m is also affected a lot, we will try an interaction term between month and euribor3m.
+
+```{r}
+bankTrain %>% 
+  ggplot(aes(euribor3m, deposit)) + geom_point() +
+  stat_smooth(method = "glm",method.args = list(family= "binomial")) +
+  facet_wrap(~month) +
+  labs(title = "Relationship between euribor3m and deposit based on month")
+```
+```{r}
+reg6 <- glm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration + month*euribor3m, bankTrain, family = binomial)
+summary(reg6)
+
+lrm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration + month*euribor3m + campaign, bankTrain, maxit=1000)
+```
+Most p-values are statistically significant (< 0.05), and Dxy increases from 0.866 to 0.872 so we would move forward with this model.
+
+## Adding one more variable
+Looking back at the first model, we realize that higher education (professional.course and university.degree) is actually quite significant. We would try to create a dummy variable for higher education
+
+```{r}
+table(bankTrain$education)
+
+bankTrain <- bankTrain %>%
+  mutate(higherEd = ifelse(education == "professional.course" | education == "university.degree", 1 ,0))
+
+reg6 <- glm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration + month*euribor3m + higherEd, bankTrain, family = binomial)
+summary(reg6)
+
+lrm(deposit ~ telephone + month + previous + emp.var.rate + cons.price.idx + cons.conf.idx + euribor3m + logDuration + month*euribor3m + campaign + higherEd, bankTrain, maxit=1000)
+
+```
+Most p-values are statistically significant (lower than 0.05), and Dxy increases from 0.872 to 0.873 so we will decide on using 
+
+```{r}
+exp(0.4850)
+exp(0.16)
+```
+
+## Interpretation:
+According to the logistic regression model, we have:
+p(X) = $\frac{e^{-192.1786 - 0.4850 *telephone - (0.9605 + 1.0747*euribor3m)*monthapr + (-1.8816 + 1.8776)*monthdec - (0.446 +0.0063)*monthjul - (0.2834 + 0.213*euribor3m)*monthjun + (-0.7424 + 2.1914*euribor3m)*monthmar - (0.5049 + 0.2729*euribor3m)*monthmay - (0.8459 + 0.0655*euribor3m)*monthnov + (-1.6902 + 1.1029*euribor3m)*monthoct + (-5.3196 + 6.0420*euribor3m)*monthsep + 0.16*previous - 1.498*emp.var.rate + 1.9160*cons.price.idx + 2.2811*logDuration - 0.0251*campaign + 0.1927*higherEd}}{1+e^{-192.1786 - 0.4850 *telephone - (0.9605 + 1.0747*euribor3m)*monthapr + (-1.8816 + 1.8776)*monthdec - (0.446 +0.0063)*monthjul - (0.2834 + 0.213*euribor3m)*monthjun + (-0.7424 + 2.1914*euribor3m)*monthmar - (0.5049 + 0.2729*euribor3m)*monthmay - (0.8459 + 0.0655*euribor3m)*monthnov + (-1.6902 + 1.1029*euribor3m)*monthoct + (-5.3196 + 6.0420*euribor3m)*monthsep + 0.16*previous - 1.498*emp.var.rate + 1.9160*cons.price.idx + 2.2811*logDuration - 0.0251*campaign + 0.1927*higherEd}}$
+
+This means that:
+- When all variables equal 0 and it's August, the log odds of `deposit` is -192.1786, and the probability of the customer subscribing to the term deposit is 3.54*10^(-84), indicating that the customer will not deposit.
+- telephone: A shift from using cell phone to telephone is associated with a decrease in the log odds of `deposit` by 0.4850 units, indicating that if the call method is telephone instead of cell phone, the odds of getting the customers to deposit go down by 1.62 times (or 162%). This makes sense as the dataset also include calls of which customers contact the help center. There will be people who need help and will be frustrated if they don't get what they need immediately but some introduction to a term deposit that they don't care about instead. Using cellphone will also create a sense of personal relationship between the caller and the customer instead of a sense of being a part of just a telemarketing campaign.
+- previous: When previous increases by 1, the log odds of `deposit` increases by 0.16 units, indicating that the odds of successfully having customers deposit go up by 1.17 times (or 117%). As mention aboved in the variable description, previous means number of contacts performed before this campaign and for this client so the more contacts are performed before, the more experience and familiarity the telemarketing team will possess and hence will persuade the customers better. 
+- emp.var.rate:
+
+
+## Validate the model
+
+### Drop-in deviance test
+```{r}
+pchisq(21272 - 12016, 27, lower.tail = FALSE)
+```
+
+### Check for binormiality 
+```{r}
+bankTrain2 <- bankTrain %>%
+  mutate(res = resid(reg6), fit = fitted(reg6))
+bankTrain2 %>% ggplot(aes(res)) + geom_histogram() + labs(title = "Histogram of residuals")
+```
+
+```{r}
+hoslem.test(bankTrain2$deposit, bankTrain2$fit)
+```
+
+##ASK : his of residuals? hoslem.test sensitive to a large number of data pts?
+
+## Prediction

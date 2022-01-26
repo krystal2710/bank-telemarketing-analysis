@@ -1,0 +1,1 @@
+"0","bankDf <- bankDf %>% replace_with_na_all(condition = ~.x == ""unknown"")"
