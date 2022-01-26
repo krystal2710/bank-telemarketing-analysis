@@ -1,8 +1,0 @@
-"0","library(dplyr)"
-"0","library(ggplot2)"
-"0","library(rms)"
-"0","library(ResourceSelection)"
-"0","shuttle <- read.csv(""C7 Shuttle.csv"")"
-"0","cancer <- read.csv(""C7 Cancer2.csv"")"
-"0","tattoos <- read.csv(""C7 Tatoos.csv"")"
-"0","sirds <-read.csv(""C7 SIRDS.csv"")"

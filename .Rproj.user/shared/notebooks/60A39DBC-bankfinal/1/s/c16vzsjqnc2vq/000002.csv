@@ -1,7 +1,0 @@
-"0","bankTrain %>% "
-"0","  ggplot(aes(euribor3m, deposit)) + geom_point() +"
-"0","  stat_smooth(method = ""glm"",method.args = list(family= ""binomial"")) +"
-"0","  facet_wrap(~month) +"
-"0","  labs(title = ""Relationship between euribor3m and deposit based on month"")"
-"2","`geom_smooth()` using formula 'y ~ x'
-"

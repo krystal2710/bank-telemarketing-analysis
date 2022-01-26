@@ -1,5 +1,0 @@
-"0","bankTrain %>%"
-"0","  ggplot(aes(duration)) + geom_histogram() +"
-"0","  labs(title = ""Histogram of duration"")"
-"2","`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-"

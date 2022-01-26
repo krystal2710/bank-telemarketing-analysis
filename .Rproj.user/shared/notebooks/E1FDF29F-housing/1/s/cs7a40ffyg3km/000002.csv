@@ -1,2 +1,0 @@
-"0","housingDF$ocean_proximity <- as.factor(housingDF$ocean_proximity)"
-"0","housingDF <- na.omit(housingDF)"

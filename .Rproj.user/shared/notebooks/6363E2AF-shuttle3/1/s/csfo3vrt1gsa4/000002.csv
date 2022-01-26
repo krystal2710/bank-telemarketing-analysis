@@ -1,9 +1,0 @@
-"0","shuttle%>%"
-"0","  ggplot(aes(Ambient.Temperature..oF.,Failure))+"
-"0","  geom_point()+"
-"0","  geom_smooth(method = ""lm"",colour = ""red"")+"
-"0","  stat_smooth(method = ""glm"",method.args = list(family= ""binomial""))"
-"2","`geom_smooth()` using formula 'y ~ x'
-"
-"2","`geom_smooth()` using formula 'y ~ x'
-"

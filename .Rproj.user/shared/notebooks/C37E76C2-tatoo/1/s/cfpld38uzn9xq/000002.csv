@@ -1,4 +1,0 @@
-"0","tatooDF1 <- tatooDF %>% "
-"0","  select(!X) %>%"
-"0","  select(!X.1) %>%"
-"0","  select(!gender..1.Male)"

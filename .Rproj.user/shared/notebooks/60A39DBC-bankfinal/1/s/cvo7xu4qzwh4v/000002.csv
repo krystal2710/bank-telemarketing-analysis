@@ -1,6 +1,0 @@
-"0","# Drop-in deviance test for month"
-"0","pchisq(12803-12267,16-7,lower.tail = FALSE)"
-"1","[1]"
-"1"," 1.115819e-109"
-"1","
-"

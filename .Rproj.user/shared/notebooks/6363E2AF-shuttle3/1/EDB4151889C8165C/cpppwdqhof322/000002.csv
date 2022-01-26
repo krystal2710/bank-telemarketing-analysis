@@ -1,8 +1,0 @@
-"0","shuttle%>%
-  ggplot(aes(Ambient.Temperature..oF.,Failure))+
-  geom_point()+
-  geom_smooth(method = ""lm"",colour = ""red"")
-"
-"2","Error in ggplot(., aes(Ambient.Temperature..oF., Failure)) : 
-  object 'shuttle' not found
-"

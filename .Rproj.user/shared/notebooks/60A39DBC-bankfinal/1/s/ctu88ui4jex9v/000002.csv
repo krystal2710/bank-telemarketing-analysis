@@ -1,3 +1,0 @@
-"0","bankTrain <- bankTrain %>%"
-"0","  select(!logCampaign) %>%"
-"0","  select(!duration)"

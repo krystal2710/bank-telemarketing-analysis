@@ -1,7 +1,0 @@
-"0",""
-"0","sum <- mov2 %>%"
-"0","  group_by(Genre,MPAA) %>%"
-"0","  summarise(mean = mean(Total.Gross, na.rm = TRUE),sd = sd(Total.Gross, na.rm = TRUE))"
-"1","`summarise()` has grouped output by 'Genre'. You can override using the `.groups` argument.
-"
-"0","sum"

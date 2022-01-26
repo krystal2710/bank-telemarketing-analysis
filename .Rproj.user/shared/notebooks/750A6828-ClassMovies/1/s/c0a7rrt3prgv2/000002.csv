@@ -1,7 +1,0 @@
-"0","sum2 <- mov2 %>%"
-"0","  group_by(Genre) %>%"
-"0","  summarise(mean = mean(Total.Gross, na.rm = TRUE),sd = sd(Total.Gross, na.rm = TRUE))"
-"0","sum3 <- mov2 %>%"
-"0","  group_by(MPAA) %>%"
-"0","  summarise(mean = mean(Total.Gross, na.rm = TRUE),sd = sd(Total.Gross, na.rm = TRUE))"
-"0","sum2"

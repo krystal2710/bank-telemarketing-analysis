@@ -1,5 +1,0 @@
-"0","housingDF %>% ggplot(aes(households)) +"
-"0","  geom_histogram() +"
-"0","  labs(title = ""Distribution of households"")"
-"2","`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-"
