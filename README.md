@@ -30,9 +30,9 @@ Note: A term deposit is a type of deposit account held at a financial institutio
 ## C. Included in the repository
 • Data: `bank-additional-full.csv`
 
-• R markdown/html file with codes and interpretation: `bankfinal.Rmd` and `bankfinal.html`. The project uses R 4.1.2
+• R markdown with codes and interpretation: `bankfinal.Rmd`. The project uses R 4.1.2
 
-• A detailed report: `bank-project-report.pdf`
+• A detailed report: `bank-project-report.html`
 
 • A powerpoint for presentation purpose: `bank-project-presentation.pdf`
 
