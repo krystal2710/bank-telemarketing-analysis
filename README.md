@@ -30,9 +30,12 @@ Note: A term deposit is a type of deposit account held at a financial institutio
 ## C. Included in the repository
 • Data: `bank-additional-full.csv`
 
-• R markdown file with codes and interpretation: `bankfinal.Rmd`. The project uses R 4.1.2
+• R markdown/html file with codes and interpretation: `bankfinal.Rmd` and `bankfinal.html`. The project uses R 4.1.2
 
-• A detailed report: `bankproject_report.pdf`
+• A detailed report: `bank-project-report.pdf`
+
+• A powerpoint for presentation purpose: `bank-project-presentation.pdf`
+
 
 ## D. Citation
 [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
